@@ -4,6 +4,9 @@
 ; Date    31st March 2020
 ;--------------------------------------------------------
 ; Include as needed
+;--------------------------------------------------------
+; TODO check if A, B, and C are in range?
+; TODO Add support for input via A == -1
 ;========================================================
 
 ; TODO prefix these with SL_
@@ -38,6 +41,7 @@ SL_loadProg  .(
             lda SL_prog
             adc SL_prog
 
+            ; Load program into SL_MEM
             tay
             ldx #$00
 loop        lda SL_prog+1, x
@@ -56,6 +60,7 @@ loop        lda SL_prog+1, x
 ;   SL_MEM     Location of SUBLEQ memory
 ;-------------------------------------------------
 SL_runProg  .(
+CCHROUT     = $FFD2
             ; Zero PC
             lda #00
             sta PC
@@ -63,151 +68,71 @@ SL_runProg  .(
             sta PC+1
 
 ; TODO change name of fetch label
-; TODO change to IsPCValid
-fetch       jsr SL_IsHalt           ; Check if halt operation
-            cpy #01                 ; If halt
-            beq halt
+fetch       ; Check if PC valid (PC >= 0)
+            lda PC+1
+            and #128                 ; Most significant bit (sign bit)
+            beq fetch1
+            jmp halt
 
-            jsr SL_FetchOps         ; Fetch A,B,C
+            ;--------------------
+            ; Fetch operands A,B,C
+            ;--------------------
 
-; TODO remove testing label
-; TODO check if A, B, and C are in range?
-fetch1      jsr SL_IsOutput         ; Check if output operation
-            cpy #01                 ; If output
-            bne sub
-            jsr SL_Output           ; Output mem[A] to display
-            jmp fetch
-
-sub         jsr SL_Sub              ; mem[B] = mem[B] - mem[A]
-            jsr SL_IsJump           ; if (Mem[b] ≤ 0) goto c
-            cpy #01                 ; If jump
-            bne fetch
-
-            lda C
-            sta PC
-            lda C+1
-            sta PC+1
-            jmp fetch
-
-halt        rts
-.)
-
-;---------------------------------
-; Fetch operands - A,B,C
-;---------------------------------
-SL_FetchOps   .(
-            ; Calc native pointer for PC
+fetch1      ; Calc native pointer for PC
             lda PC
             sta HPTR
             lda PC+1
             sta HPTR+1
             jsr SL_CalcNPTR
+
             ; Get A,B,C
             ldy #05
-loop        lda (NPTR),y
+floop       lda (NPTR),y
             sta A,y
             dey
-            bpl loop
+            bpl floop
+
             ; Move PC to start of next operands
             clc
             lda PC
             adc #03
             sta PC
-            bcc ret
+            bcc fetchEnd
             inc PC+1
-ret         rts
-.)
+fetchEnd
 
+            ;------------------------------------------------------------
+            ; Output mem[A] to display if B -1 and move to next operands
+            ;------------------------------------------------------------
 
-
-;---------------------------------
-; Calculate the pointer to native
-; memory from the host pointer.
-; HPTR - host pointer
-; NPTR - native pointer
-;---------------------------------
-SL_CalcNPTR ; First double HPTR because host memory is
-            ; stored as 16-bit words
-            clc
-            lda HPTR
-            adc HPTR
-            sta NPTR
-            lda HPTR+1
-            adc HPTR+1
-            sta NPTR+1
-            ; Base pointer off SL_MEM
-            clc
-            lda NPTR
-            adc #<SL_MEM
-            sta NPTR
-            lda NPTR+1
-            adc #>SL_MEM
-            sta NPTR+1
-            rts
-
-
-;----------------------------------------
-; Check if PC is -1 indicating halt
-; Sets 'y' register to 1 if true, else 0
-; TODO Work how to just set Z flag
-;----------------------------------------
-SL_IsHalt   .(
-            ldy #00
-            lda PC
-            cmp #<(-1)
-            bne ret
-            lda PC+1
-            cmp #>(-1)
-            bne ret
-            ldy #01
-ret         rts
-.)
-
-
-;----------------------------------------
-; Check if B is -1 indicating output
-; Sets 'y' register to 1 if true, else 0
-; TODO Work how to just set Z flag
-;----------------------------------------
-SL_IsOutput .(
-            ldy #00
+            ; Check if B == -1 indicating that mem[A] should be output
             lda B
             cmp #<(-1)
-            bne ret
+            bne sub
             lda B+1
             cmp #>(-1)
-            bne ret
-            ldy #01
-ret         rts
-.)
+            bne sub
 
-;--------------------------
-; Output mem[A] to display
-;--------------------------
-SL_Output   .(
-CCHROUT     = $FFD2
+            ; Calc native pointer for A
             lda A
             sta HPTR
             lda A+1
             sta HPTR+1
             jsr SL_CalcNPTR
 
-            ; Output LSB of A
+            ; Output LSB of mem[A] to display
             ldx #00
             lda (NPTR, x)
             jsr CCHROUT
-            rts
-.)
+            jmp fetch
 
+            ;-----------------------------------
+            ; Perform subtraction
+            ; mem[B] = mem[B] - mem[A]
+            ; TODO create routine to repoint A and B and use before SL_Output
+            ;-----------------------------------
 
-;-----------------------------------
-; Perform subtraction
-; mem[B] = mem[B] - mem[A]
-; Leaves A and B pointing to native
-; memory locations.
-;-----------------------------------
-SL_Sub      ; TODO create routine to repoint A and B and use before SL_Output
-            ; Point A and B to host memory locations
+sub         ; Calc native pointers for A and B
             lda A
             sta HPTR
             lda A+1
@@ -237,27 +162,49 @@ SL_Sub      ; TODO create routine to repoint A and B and use before SL_Output
             lda (B), y
             sbc (A), y
             sta (B), y
-            rts
 
-
-;--------------------------------------
-; Check if should jump to C
-; if (Mem[B] ≤ 0) goto C
-; Sets 'y' register to 1 if true, else 0
-; TODO Decide if should just set Z flag
-;--------------------------------------
-SL_IsJump   .(
-            ldy #01                  ; Is mem[B] < 0
-            lda (B), y
+            ; if (mem[B] <= 0) goto C
+            lda (B), y               ; Y is 1 from above
             and #128                 ; Most significant bit
-            beq isZero
-            rts
-isZero      ldy #00                  ; Is mem[B] == 0
+            bne jump
             lda (B), y
-            bne ret
-            iny
+            bne fetch3
+            dey                      ; Y will now be 0
             lda (B), y
-            beq ret
-            dey
-ret         rts
+            bne fetch3
+
+            ; Goto C
+jump        lda C
+            sta PC
+            lda C+1
+            sta PC+1
+fetch3      jmp fetch
+
+halt        rts
 .)
+
+
+;---------------------------------
+; Calculate the pointer to native
+; memory from the host pointer.
+; HPTR - host pointer
+; NPTR - native pointer
+;---------------------------------
+SL_CalcNPTR ; First double HPTR because host memory is
+            ; stored as 16-bit words
+            clc
+            lda HPTR
+            adc HPTR
+            sta NPTR
+            lda HPTR+1
+            adc HPTR+1
+            sta NPTR+1
+            ; Base pointer off SL_MEM
+            clc
+            lda NPTR
+            adc #<SL_MEM
+            sta NPTR
+            lda NPTR+1
+            adc #>SL_MEM
+            sta NPTR+1
+            rts
