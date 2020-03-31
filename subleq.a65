@@ -1,0 +1,263 @@
+;========================================================
+; SUBLEQ Emulator
+; Author  Lawrence woodman <lwoodman@vlifesystems.com>
+; Date    31st March 2020
+;--------------------------------------------------------
+; Include as needed
+;========================================================
+
+; TODO prefix these with SL_
+; TODO Check and document locations and probs
+A           = $A7               ; A Operand
+B           = $A9               ; B Operand
+C           = $AB               ; C Operand
+PC          = $BE               ; TODO Find better location
+HPTR        = $92               ; TODO Find better location
+NPTR        = $94               ; TODO Find better location
+SL_MEM      = $1500             ; TODO Find better location
+
+
+
+;-------------------------------------------------
+; Load a program into memory
+;-------------------------------------------------
+; Args:
+;   SL_prog    Location of program to load. First
+;              byte/word is the length of the program
+;              in bytes.  Uses 16-bit words.
+;   SL_MEM     Location of SUBLEQ memory
+;-------------------------------------------------
+; TODO Correct prog comment byte/word
+; TODO put this into another program
+; TODO Make possible to load > 128 16-bit word programs
+;-------------------------------------------------
+SL_loadProg  .(
+            ; Get Program size and double it because
+            ; program stored as 16-bit words
+            clc
+            lda SL_prog
+            adc SL_prog
+
+            tay
+            ldx #$00
+loop        lda SL_prog+1, x
+            sta SL_MEM, x
+            inx
+            dey
+            bne loop
+            rts
+.)
+
+
+;-------------------------------------------------
+; Run program
+;-------------------------------------------------
+; Args:
+;   SL_MEM     Location of SUBLEQ memory
+;-------------------------------------------------
+SL_runProg  .(
+            ; Zero PC
+            lda #00
+            sta PC
+            lda #00
+            sta PC+1
+
+; TODO change name of fetch label
+; TODO change to IsPCValid
+fetch       jsr SL_IsHalt           ; Check if halt operation
+            cpy #01                 ; If halt
+            beq halt
+
+            jsr SL_FetchOps         ; Fetch A,B,C
+
+; TODO remove testing label
+; TODO check if A, B, and C are in range?
+fetch1      jsr SL_IsOutput         ; Check if output operation
+            cpy #01                 ; If output
+            bne sub
+            jsr SL_Output           ; Output mem[A] to display
+            jmp fetch
+
+sub         jsr SL_Sub              ; mem[B] = mem[B] - mem[A]
+            jsr SL_IsJump           ; if (Mem[b] ≤ 0) goto c
+            cpy #01                 ; If jump
+            bne fetch
+
+            lda C
+            sta PC
+            lda C+1
+            sta PC+1
+            jmp fetch
+
+halt        rts
+.)
+
+;---------------------------------
+; Fetch operands - A,B,C
+;---------------------------------
+SL_FetchOps   .(
+            ; Calc native pointer for PC
+            lda PC
+            sta HPTR
+            lda PC+1
+            sta HPTR+1
+            jsr SL_CalcNPTR
+            ; Get A,B,C
+            ldy #05
+loop        lda (NPTR),y
+            sta A,y
+            dey
+            bpl loop
+            ; Move PC to start of next operands
+            clc
+            lda PC
+            adc #03
+            sta PC
+            bcc ret
+            inc PC+1
+ret         rts
+.)
+
+
+
+;---------------------------------
+; Calculate the pointer to native
+; memory from the host pointer.
+; HPTR - host pointer
+; NPTR - native pointer
+;---------------------------------
+SL_CalcNPTR ; First double HPTR because host memory is
+            ; stored as 16-bit words
+            clc
+            lda HPTR
+            adc HPTR
+            sta NPTR
+            lda HPTR+1
+            adc HPTR+1
+            sta NPTR+1
+            ; Base pointer off SL_MEM
+            clc
+            lda NPTR
+            adc #<SL_MEM
+            sta NPTR
+            lda NPTR+1
+            adc #>SL_MEM
+            sta NPTR+1
+            rts
+
+
+;----------------------------------------
+; Check if PC is -1 indicating halt
+; Sets 'y' register to 1 if true, else 0
+; TODO Work how to just set Z flag
+;----------------------------------------
+SL_IsHalt   .(
+            ldy #00
+            lda PC
+            cmp #<(-1)
+            bne ret
+            lda PC+1
+            cmp #>(-1)
+            bne ret
+            ldy #01
+ret         rts
+.)
+
+
+;----------------------------------------
+; Check if B is -1 indicating output
+; Sets 'y' register to 1 if true, else 0
+; TODO Work how to just set Z flag
+;----------------------------------------
+SL_IsOutput .(
+            ldy #00
+            lda B
+            cmp #<(-1)
+            bne ret
+            lda B+1
+            cmp #>(-1)
+            bne ret
+            ldy #01
+ret         rts
+.)
+
+;--------------------------
+; Output mem[A] to display
+;--------------------------
+SL_Output   .(
+CCHROUT     = $FFD2
+            lda A
+            sta HPTR
+            lda A+1
+            sta HPTR+1
+            jsr SL_CalcNPTR
+
+            ; Output LSB of A
+            ldx #00
+            lda (NPTR, x)
+            jsr CCHROUT
+            rts
+.)
+
+
+;-----------------------------------
+; Perform subtraction
+; mem[B] = mem[B] - mem[A]
+; Leaves A and B pointing to native
+; memory locations.
+;-----------------------------------
+SL_Sub      ; TODO create routine to repoint A and B and use before SL_Output
+            ; Point A and B to host memory locations
+            lda A
+            sta HPTR
+            lda A+1
+            sta HPTR+1
+            jsr SL_CalcNPTR
+            lda NPTR
+            sta A
+            lda NPTR+1
+            sta A+1
+            lda B
+            sta HPTR
+            lda B+1
+            sta HPTR+1
+            jsr SL_CalcNPTR
+            lda NPTR
+            sta B
+            lda NPTR+1
+            sta B+1
+
+            ; mem[B] = mem[B] - mem[A]
+            ldy #00
+            sec
+            lda (B), y
+            sbc (A), y
+            sta (B), y
+            iny
+            lda (B), y
+            sbc (A), y
+            sta (B), y
+            rts
+
+
+;--------------------------------------
+; Check if should jump to C
+; if (Mem[B] ≤ 0) goto C
+; Sets 'y' register to 1 if true, else 0
+; TODO Decide if should just set Z flag
+;--------------------------------------
+SL_IsJump   .(
+            ldy #01                  ; Is mem[B] < 0
+            lda (B), y
+            and #128                 ; Most significant bit
+            beq isZero
+            rts
+isZero      ldy #00                  ; Is mem[B] == 0
+            lda (B), y
+            bne ret
+            iny
+            lda (B), y
+            beq ret
+            dey
+ret         rts
+.)

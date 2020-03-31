@@ -1,0 +1,50 @@
+;========================================================
+;  Output "HELLO, WORLD!" using SUBLEQ
+;  Author  Lawrence woodman <lwoodman@vlifesystems.com>
+;  Date    31st March 2020
+;========================================================
+
+; Basic Stub
+BSPACE    = $14               ; Backspace character
+COLON     = $3A               ; Colon character
+TOK_REM   = $8F               ; REM token
+TOK_SYS   = $9E               ; SYS token
+
+; TODO Check start location is appropriate
+
+            .byt  $01, $10    ; Load address ($1001)
+
+            * = $1001
+            ; TODO get rid of basic loader as more appropriate to just SYS into
+            .word basicEnd    ; Next Line link, here end of Basic program
+            .word 1           ; The line number for the SYS statement
+            .byt  TOK_SYS     ; SYS token
+            .asc  " "
+            .asc  "4150"      ; Start of machine language
+            .byt  COLON       ; Colon character
+            .byt  TOK_REM     ; REM token
+            .asc  " "
+            .dsb  15,BSPACE   ; Backspace characters to make line invisible
+            .asc  "(C) 2020 LORRY WOODMAN"
+            .byt  0           ; End of Basic line
+basicEnd    .word 0           ; End of Basic program
+
+            jmp main
+
+; Include the SUBLEQ emulator
+#include "subleq.a65"
+
+main        jsr SL_loadProg
+            jsr SL_runProg
+            rts
+
+
+                         ; TODO Increase .byt to .word for program size
+SL_prog     .byt 31      ; Number of 16-bit words in program
+            .word 16, -1,  3
+            .word 15,  0,  6
+            .word 15, 10,  9
+            .word 30, 16, -1
+            .word 30, 30,  0
+            .word -1
+            .word 104,101,108,108,111,44,32,119,111,114,108,100,33,10,0
