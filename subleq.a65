@@ -17,6 +17,7 @@ C           = $AB               ; C Operand
 PC          = $BE               ; TODO Find better location
 HPTR        = $92               ; TODO Find better location
 NPTR        = $94               ; TODO Find better location
+AVAL        = $3B               ; TODO Find better location
 SL_MEM      = $1500             ; TODO Find better location
 
 
@@ -60,6 +61,7 @@ loop        lda SL_prog+1, x
 ;   SL_MEM     Location of SUBLEQ memory
 ;-------------------------------------------------
 SL_run      .(
+GETIN       = $FFE4
 CCHROUT     = $FFD2
             ; Zero PC
             lda #00
@@ -99,30 +101,62 @@ floop       lda (NPTR),y
             inc PC+1
 fetchEnd
 
-            ;------------------------------------------------------------
-            ; Output mem[A] to display if B -1 and move to next operands
-            ;------------------------------------------------------------
-
-            ; Check if B == -1 indicating that mem[A] should be output
-            lda B
+            ; Check if A == -1 indicating that input should go to mem[B]
+            lda A
             cmp #<(-1)
-            bne sub
-            lda B+1
+            bne getAMemVal
+            lda A+1
             cmp #>(-1)
-            bne sub
+            bne getAMemVal
 
-            ; Calc native pointer for A
+            ; Get character from input
+getChar     jsr GETIN
+            cmp #00
+            beq getChar           ; Wait until a character is pressed
+            sta AVAL
+            lda #00
+            sta AVAL+1
+            jmp output
+
+
+getAMemVal  ; Calc native pointer for A and get mem[A]
             lda A
             sta HPTR
             lda A+1
             sta HPTR+1
             jsr SL_CalcNPTR
+            ldy #00
+            lda (NPTR), y
+            sta AVAL
+            iny
+            lda (NPTR), y
+            sta AVAL+1
+
+            ;--------------------------------------
+            ; Output mem[A] or input to display
+            ; if B == -1 and move to next operands
+            ;--------------------------------------
+
+output      ; Check if B == -1 indicating that mem[A] should be output
+            lda B
+            cmp #<(-1)
+            bne calcNPTRB
+            lda B+1
+            cmp #>(-1)
+            bne calcNPTRB
 
             ; Output LSB of mem[A] to display
-            ldx #00
-            lda (NPTR, x)
+            lda AVAL
             jsr CCHROUT
             jmp fetch
+
+calcNPTRB   ; Calc native pointer B
+            lda B
+            sta HPTR
+            lda B+1
+            sta HPTR+1
+            jsr SL_CalcNPTR
+
 
             ;-----------------------------------
             ; Perform subtraction
@@ -130,45 +164,26 @@ fetchEnd
             ; TODO create routine to repoint A and B and use before SL_Output
             ;-----------------------------------
 
-sub         ; Calc native pointers for A and B
-            lda A
-            sta HPTR
-            lda A+1
-            sta HPTR+1
-            jsr SL_CalcNPTR
-            lda NPTR
-            sta A
-            lda NPTR+1
-            sta A+1
-            lda B
-            sta HPTR
-            lda B+1
-            sta HPTR+1
-            jsr SL_CalcNPTR
-            lda NPTR
-            sta B
-            lda NPTR+1
-            sta B+1
-
             ; mem[B] = mem[B] - mem[A]
-            ldy #00
+sub         ldy #00
             sec
-            lda (B), y
-            sbc (A), y
-            sta (B), y
+            lda (NPTR), y     ; NPTR is B as a native pointer
+            sbc AVAL
+            sta (NPTR), y
             iny
-            lda (B), y
-            sbc (A), y
-            sta (B), y
+            lda (NPTR), y
+            sbc AVAL
+            sta (NPTR), y
 
             ; if (mem[B] <= 0) goto C
-            lda (B), y               ; Y is 1 from above
+            ; NPTR is B as a native pointer
+            lda (NPTR), y               ; Y is 1 from above
             and #128                 ; Most significant bit
             bne jump
-            lda (B), y
+            lda (NPTR), y
             bne fetch3
             dey                      ; Y will now be 0
-            lda (B), y
+            lda (NPTR), y
             bne fetch3
 
             ; Goto C
