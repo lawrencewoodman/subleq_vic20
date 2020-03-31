@@ -35,7 +35,7 @@ basicEnd    .word 0           ; End of Basic program
 #include "subleq.a65"
 
 main        jsr SL_loadProg
-            jsr SL_runProg
+            jsr SL_run
             rts
 
 

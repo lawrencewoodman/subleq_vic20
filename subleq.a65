@@ -59,15 +59,13 @@ loop        lda SL_prog+1, x
 ; Args:
 ;   SL_MEM     Location of SUBLEQ memory
 ;-------------------------------------------------
-SL_runProg  .(
+SL_run      .(
 CCHROUT     = $FFD2
             ; Zero PC
             lda #00
             sta PC
-            lda #00
             sta PC+1
 
-; TODO change name of fetch label
 fetch       ; Check if PC valid (PC >= 0)
             lda PC+1
             and #128                 ; Most significant bit (sign bit)
