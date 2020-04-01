@@ -17,6 +17,7 @@ C           = $AB               ; C Operand
 PC          = $BE               ; TODO Find better location
 HPTR        = $92               ; TODO Find better location
 NPTR        = $94               ; TODO Find better location
+SKIPSUB     = $96               ; TODO Find better location
 AVAL        = $3B               ; TODO Find better location
 SL_MEM      = $1500             ; TODO Find better location
 
@@ -102,6 +103,8 @@ floop       lda (NPTR),y
 fetchEnd
 
             ; Check if A == -1 indicating that input should go to mem[B]
+            lda #00
+            sta SKIPSUB
             lda A
             cmp #<(-1)
             bne getAMemVal
@@ -110,6 +113,8 @@ fetchEnd
             bne getAMemVal
 
             ; Get character from input
+            ldy #01
+            sta SKIPSUB           ; Record that should skip sub
 getChar     jsr GETIN
             cmp #00
             beq getChar           ; Wait until a character is pressed
@@ -140,22 +145,36 @@ getAMemVal  ; Calc native pointer for A and get mem[A]
 output      ; Check if B == -1 indicating that mem[A] should be output
             lda B
             cmp #<(-1)
-            bne calcNPTRB
+            bne endOutput
             lda B+1
             cmp #>(-1)
-            bne calcNPTRB
+            bne endOutput
 
             ; Output LSB of mem[A] to display
             lda AVAL
             jsr CCHROUT
             jmp fetch
+endOutput
 
-calcNPTRB   ; Calc native pointer B
+            ; Calc native pointer B
             lda B
             sta HPTR
             lda B+1
             sta HPTR+1
             jsr SL_CalcNPTR
+
+            ; Check if should skip sub
+            lda SKIPSUB
+            beq sub
+
+            ; Store value indicated by A to mem[B]
+            ldy #00
+            lda AVAL
+            sta (NPTR), y     ; NPTR is B as a native pointer
+            iny
+            lda AVAL+1
+            sta (NPTR), y
+            jmp fetch
 
 
             ;-----------------------------------
