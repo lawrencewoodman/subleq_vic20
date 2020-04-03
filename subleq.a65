@@ -21,6 +21,9 @@ SKIPSUB     = $96               ; TODO Find better location
 AVAL        = $3B               ; TODO Find better location
 SL_MEM      = $1500             ; TODO Find better location
 
+; SUBLEQ Ports
+IN          = -1
+OUT         = -1
 
 
 ;-------------------------------------------------
@@ -106,10 +109,10 @@ fetchEnd
             lda #00
             sta SKIPSUB
             lda A
-            cmp #<(-1)
+            cmp #<(IN)
             bne getAMemVal
             lda A+1
-            cmp #>(-1)
+            cmp #>(IN)
             bne getAMemVal
 
             ; Get character from input
@@ -144,10 +147,10 @@ getAMemVal  ; Calc native pointer for A and get mem[A]
 
 output      ; Check if B == -1 indicating that mem[A] should be output
             lda B
-            cmp #<(-1)
+            cmp #<(OUT)
             bne endOutput
             lda B+1
-            cmp #>(-1)
+            cmp #>(OUT)
             bne endOutput
 
             ; Output LSB of mem[A] to display
