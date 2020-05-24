@@ -31,30 +31,45 @@ OUT         = -1
 ;-------------------------------------------------
 ; Args:
 ;   SL_prog    Location of program to load. First
-;              byte/word is the length of the program
-;              in bytes.  Uses 16-bit words.
+;              word is the length of the program
+;              in 16-bit words.
 ;   SL_MEM     Location of SUBLEQ memory
 ;-------------------------------------------------
-; TODO Correct prog comment byte/word
-; TODO put this into another program
-; TODO Make possible to load > 128 16-bit word programs
-;-------------------------------------------------
 SL_loadProg  .(
-            ; Get Program size and double it because
+            ; Get program size and double it because
             ; program stored as 16-bit words
             clc
             lda SL_prog
             adc SL_prog
+            sta SL_prog
+            lda SL_prog+1
+            adc SL_prog+1
+            sta SL_prog+1
 
-            ; Load program into SL_MEM
-            tay
-            ldx #$00
-loop        lda SL_prog+1, x
-            sta SL_MEM, x
-            inx
-            dey
-            bne loop
-            rts
+            ; Copy program into SL_MEM
+            ldy #0
+            ldx SL_prog+1
+            beq mPage2
+            ; Move a page at a time
+mPage       lda SL_prog+2,y          ; The program source
+            sta SL_MEM,y             ; The destination
+            iny
+            bne mPage
+            inc mPage+1              ; Inc the source address
+            inc mRem+1               ; /
+            inc mPage+3              ; Inc the destination address
+            inc mRem+3               ; /
+            dex
+            bne mPage
+mPage2      ldx SL_prog
+            beq done
+            ; Move the remaining bytes
+mRem        lda SL_prog+2,y          ; The program source
+            sta SL_MEM,y             ; The destination
+            iny
+            dex
+            bne mRem
+done        rts
 .)
 
 

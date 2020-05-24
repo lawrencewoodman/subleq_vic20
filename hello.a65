@@ -39,8 +39,7 @@ main        jsr SL_loadProg
             rts
 
 
-                         ; TODO Increase .byt to .word for program size
-SL_prog     .byt 31      ; Number of 16-bit words in program
+SL_prog     .word 31      ; Number of 16-bit words in program
             .word 16, -1,  3
             .word 15,  0,  6
             .word 15, 10,  9
