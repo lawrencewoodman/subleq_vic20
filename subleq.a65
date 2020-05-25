@@ -160,7 +160,7 @@ sub         ldy #00
             sta (NPTR), y
             iny
             lda (NPTR), y
-            sbc AVAL
+            sbc AVAL+1
             sta (NPTR), y
 
             ; if (mem[B] <= 0) goto C
