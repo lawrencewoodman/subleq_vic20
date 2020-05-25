@@ -19,58 +19,10 @@ HPTR        = $92               ; TODO Find better location
 NPTR        = $94               ; TODO Find better location
 SKIPSUB     = $96               ; TODO Find better location
 AVAL        = $3B               ; TODO Find better location
-SL_MEM      = $1500             ; TODO Find better location
 
 ; SUBLEQ Ports
 IN          = -1
 OUT         = -1
-
-
-;-------------------------------------------------
-; Load a program into memory
-;-------------------------------------------------
-; Args:
-;   SL_prog    Location of program to load. First
-;              word is the length of the program
-;              in 16-bit words.
-;   SL_MEM     Location of SUBLEQ memory
-;-------------------------------------------------
-SL_loadProg  .(
-            ; Get program size and double it because
-            ; program stored as 16-bit words
-            clc
-            lda SL_prog
-            adc SL_prog
-            sta SL_prog
-            lda SL_prog+1
-            adc SL_prog+1
-            sta SL_prog+1
-
-            ; Copy program into SL_MEM
-            ldy #0
-            ldx SL_prog+1
-            beq mPage2
-            ; Move a page at a time
-mPage       lda SL_prog+2,y          ; The program source
-            sta SL_MEM,y             ; The destination
-            iny
-            bne mPage
-            inc mPage+1              ; Inc the source address
-            inc mRem+1               ; /
-            inc mPage+3              ; Inc the destination address
-            inc mRem+3               ; /
-            dex
-            bne mPage
-mPage2      ldx SL_prog
-            beq done
-            ; Move the remaining bytes
-mRem        lda SL_prog+2,y          ; The program source
-            sta SL_MEM,y             ; The destination
-            iny
-            dex
-            bne mRem
-done        rts
-.)
 
 
 ;-------------------------------------------------
@@ -131,11 +83,10 @@ fetchEnd
             bne getAMemVal
 
             ; Get character from input
-            ldy #01
-            sta SKIPSUB           ; Record that should skip sub
+            inc SKIPSUB              ; Record that should skip sub
 getChar     jsr GETIN
             cmp #00
-            beq getChar           ; Wait until a character is pressed
+            beq getChar              ; Wait until a character is pressed
             sta AVAL
             lda #00
             sta AVAL+1
@@ -188,7 +139,7 @@ endOutput
             ; Store value indicated by A to mem[B]
             ldy #00
             lda AVAL
-            sta (NPTR), y     ; NPTR is B as a native pointer
+            sta (NPTR), y            ; NPTR is B as a native pointer
             iny
             lda AVAL+1
             sta (NPTR), y
@@ -214,7 +165,7 @@ sub         ldy #00
 
             ; if (mem[B] <= 0) goto C
             ; NPTR is B as a native pointer
-            lda (NPTR), y               ; Y is 1 from above
+            lda (NPTR), y            ; Y is 1 from above
             and #128                 ; Most significant bit
             bne jump
             lda (NPTR), y
