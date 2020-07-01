@@ -6,7 +6,6 @@
 ; Include as needed
 ;--------------------------------------------------------
 ; TODO check if A, B, and C are in range?
-; TODO Add support for input via A == -1
 ;========================================================
 
 ; TODO prefix these with SL_
