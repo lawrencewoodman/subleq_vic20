@@ -1,8 +1,11 @@
-;========================================================
-;  Test SUBLEQ sble command
-;  Author  Lawrence woodman <lwoodman@vlifesystems.com>
-;  Date    21st June 2020
-;========================================================
+;=================================================================
+; Test SUBLEQ sble command
+; Date    21st June 2020
+;-----------------------------------------------------------------
+; Copyright (C) 2020 Lawrence Woodman <lwoodman@vlifesystems.com>
+; Licensed under a BSD 0-Clause licence.
+; Please see 0BSD_LICENCE.md for details.
+;=================================================================
 
 ; Basic Stub
 BSPACE    = $14               ; Backspace character
@@ -10,12 +13,10 @@ COLON     = $3A               ; Colon character
 TOK_REM   = $8F               ; REM token
 TOK_SYS   = $9E               ; SYS token
 
-; TODO Check start location is appropriate
 
             .byt  $01, $12    ; Load address ($1201)
 
             * = $1201
-            ; TODO get rid of basic loader as more appropriate to just SYS into
             .word basicEnd    ; Next Line link, here end of Basic program
             .word 1           ; The line number for the SYS statement
             .byt  TOK_SYS     ; SYS token

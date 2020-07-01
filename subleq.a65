@@ -1,12 +1,13 @@
-;========================================================
+;=====================================================================
 ; SUBLEQ Emulator
 ; Author  Lawrence woodman <lwoodman@vlifesystems.com>
 ; Date    31st March 2020
-;--------------------------------------------------------
+;---------------------------------------------------------------------
 ; Include as needed
-;--------------------------------------------------------
-; TODO check if A, B, and C are in range?
-;========================================================
+;---------------------------------------------------------------------
+; Copyright (C) 2020 Lawrence Woodman <lwoodman@vlifesystems.com>
+; Licensed under an MIT licence.  Please see LICENCE.md for details.
+;=====================================================================
 
 ; TODO Check and document locations and probs
 SL_A        = $A7               ; A Operand
@@ -28,6 +29,8 @@ SL_OUT      = -1
 ;-------------------------------------------------
 ; Args:
 ;   SL_MEM     Location of SUBLEQ memory
+;-------------------------------------------------
+; TODO check if A, B, and C are in range?
 ;-------------------------------------------------
 SL_run      .(
 GETIN       = $FFE4

@@ -1,8 +1,11 @@
-;========================================================
-;  FizzBizz using SUBLEQ
-;  Author  Lawrence woodman <lwoodman@vlifesystems.com>
-;  Date    23rd June 2020
-;========================================================
+;=================================================================
+; FizzBizz using SUBLEQ
+; Date    23rd June 2020
+;-----------------------------------------------------------------
+; Copyright (C) 2020 Lawrence Woodman <lwoodman@vlifesystems.com>
+; Licensed under a BSD 0-Clause licence.
+; Please see 0BSD_LICENCE.md for details.
+;=================================================================
 
 ; Basic Stub
 BSPACE    = $14               ; Backspace character
@@ -14,7 +17,6 @@ TOK_SYS   = $9E               ; SYS token
             .byt  $01, $12    ; Load address ($1201)
 
             * = $1201
-            ; TODO get rid of basic loader as more appropriate to just SYS into
             .word basicEnd    ; Next Line link, here end of Basic program
             .word 1           ; The line number for the SYS statement
             .byt  TOK_SYS     ; SYS token
