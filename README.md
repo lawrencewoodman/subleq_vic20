@@ -42,6 +42,8 @@ These can be assembled using the [XA](https://www.floodgap.com/retrotech/xa/) as
   <dd>Play Rock, Paper, Scissors against the Vic.  Requires: 8k+</dd>
   <dt>sble.test.a65</dt>
   <dd>Tests the VM using the <code>sble</code> (SUBLEQ) instruction.  Requires: Unexpanded Vic</dd>
+  <dt>standard.test.a65</dt>
+  <dd>Tests standard routines.  Requires: 16k+</dd>
 </dl>
 
 
