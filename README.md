@@ -37,11 +37,11 @@ These can be assembled using the [XA](https://www.floodgap.com/retrotech/xa/) as
   <dt>hello.a65</dt>
   <dd>Displays "HELLO, WORLD!".  Requires: Unexpanded Vic</dd>
   <dt>fizzbuzz.a65</dt>
-  <dd>Plays Fizz Buzz up to 100.  Requires: 8k+</dd>
+  <dd>Plays Fizz Buzz up to 100.  Requires: Unexpanded Vic</dd>
   <dt>rock_paper_scissors.a65</dt>
   <dd>Play Rock, Paper, Scissors against the Vic.  Requires: 8k+</dd>
   <dt>sble.test.a65</dt>
-  <dd>Tests the VM using the <code>sble</code> (SUBLEQ) instruction.  Requires: 8k+</dd>
+  <dd>Tests the VM using the <code>sble</code> (SUBLEQ) instruction.  Requires: Unexpanded Vic</dd>
 </dl>
 
 
