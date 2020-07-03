@@ -25,9 +25,7 @@ The SUBLEQ virtual machine is contained in the file `subleq.a65` which can be in
 
 Examples
 --------
-There are number of example assembler files in `examples/`.
-
-These can be assembled using the [XA](https://www.floodgap.com/retrotech/xa/) assembler from within `examples/`:
+There are number of example assembler files in `examples/`.  These were created using the [sblasm](https://github.com/lawrencewoodman/sblasm) assembler and the original source files can be found in its repo.  They can be assembled using the [XA](https://www.floodgap.com/retrotech/xa/) assembler from within `examples/`:
 
     $ xa -I .. -o fizzbuzz.prg fizzbuzz.a65
 
@@ -45,6 +43,9 @@ These can be assembled using the [XA](https://www.floodgap.com/retrotech/xa/) as
   <dt>standard.test.a65</dt>
   <dd>Tests standard routines.  Requires: 16k+</dd>
 </dl>
+
+
+Each program is prefixed with a basic stub so you can just load them and type `run` to start.
 
 
 Licence
