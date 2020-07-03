@@ -46,10 +46,7 @@ Arguments:
   array set params {indentNumSpaces 0}
   while {[llength $_args]} {
     switch -glob -- [lindex $_args 0] {
-      -n   {
-        set params(indentNumSpaces) [lindex $_args 1]
-        set _args [lrange $_args 2 end]
-      }
+      -n   {set _args [lassign $_args - params(indentNumSpaces)]}
       -h   {
         puts $usage
         set _args [lrange $_args 1 end]
