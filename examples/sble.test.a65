@@ -32,7 +32,7 @@ basicEnd    .word 0           ; End of Basic program
 
             jmp main
 
-SL_MEM      = SL_prog
+SL_MEM      = prog
 
 ; Include the SUBLEQ emulator
 #include "subleq.a65"
@@ -42,7 +42,7 @@ main        jsr SL_run
             rts
 
 
-SL_prog     .word 3,3,4,0,3,3,10,45,13,0
+prog        .word 3,3,4,0,3,3,10,45,13,0
             .word 3,3,24,102,13,0,46,0,32,0
             .word 47,13,0,0,23,23,27,95,3,30
             .word 3,23,33,3,3,36,48,48,39,58
