@@ -1,7 +1,7 @@
 subleq_vic20
 ============
 
-A [SUBLEQ](https://techtinkering.com/articles/subleq-a-one-instruction-set-computer/ "SUBLEQ - A One Instruction Set Computer (OISC)") virtual machine for the Commodore VIC-20.
+A [SUBLEQ](https://techtinkering.com/articles/subleq-a-one-instruction-set-computer/ "SUBLEQ - A One Instruction Set Computer (OISC)") virtual machine for the Commodore VIC-20.  This VM uses 16-bit words.
 
 
 SUBLEQ
@@ -20,12 +20,13 @@ To find out more, have a look at the article: [SUBLEQ - A One Instruction Set Co
 Usage
 -----
 
-The SUBLEQ virtual machine is contained in the file `subleq.a65` which can be included into the file you want to run it from.  You need to define SL_MEM as a constant to point to where the program is in memory and then `jsr SL_run` to start the VM.  Please see the examples to see how this is done.
+The SUBLEQ virtual machine is contained in the file 'subleq.a65' which can be included into the file you want to run it from.  You need to define `SL_MEM` as a constant to point to where the program is in memory and then use `jsr SL_run` to start the VM.
 
+There is a script, _sqtoword.tcl_, which can be used to convert the output of a SUBLEQ assembler into `.word` entries.  There are also _skeleton_ scripts for unexpanded and 8k+ systems to append these `.word` entries to.
 
 Examples
 --------
-There are number of example assembler files in `examples/`.  These were created using the [sblasm](https://github.com/lawrencewoodman/sblasm) assembler and the original source files can be found in its repo.  They can be assembled using the [XA](https://www.floodgap.com/retrotech/xa/) assembler from within `examples/`:
+There are number of example assembler files in `examples/`.  These were created using the [sblasm](https://github.com/lawrencewoodman/sblasm) assembler and the original SUBLEQ source files can be found in its repo.  They can be assembled using the [XA](https://www.floodgap.com/retrotech/xa/) assembler from within `examples/`:
 
     $ xa -I .. -o fizzbuzz.prg fizzbuzz.a65
 
