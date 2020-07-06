@@ -1,7 +1,7 @@
 subleq_vic20
 ============
 
-A [SUBLEQ](https://techtinkering.com/articles/subleq-a-one-instruction-set-computer/ "SUBLEQ - A One Instruction Set Computer (OISC)") virtual machine for the Commodore VIC-20.  This VM uses 16-bit words.
+A [SUBLEQ](https://techtinkering.com/articles/subleq-a-one-instruction-set-computer/ "SUBLEQ - A One Instruction Set Computer (OISC)") Virtual Machine for the Commodore VIC-20.  This VM uses 16-bit words.
 
 
 SUBLEQ

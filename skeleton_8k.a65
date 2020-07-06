@@ -34,7 +34,7 @@ basicEnd    .word 0           ; End of Basic program
 
 SL_MEM      = prog
 
-; Include the SUBLEQ emulator
+; Include the SUBLEQ Virtual Machine
 #include "subleq.a65"
 
 
