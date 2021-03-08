@@ -167,8 +167,7 @@ sub         ldy #00
             ; if (mem[B] <= 0) goto C
             ; SL_NPTR is B as a native pointer
             lda (SL_NPTR), y         ; Y is 1 from above
-            and #128                 ; Most significant bit
-            bne jump
+            bmi jump
             lda (SL_NPTR), y
             bne fetch3
             dey                      ; Y will now be 0
